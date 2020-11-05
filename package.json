@@ -1,0 +1,31 @@
+{
+  "name": "shopify-nextjs-toolbox",
+  "version": "0.1.5",
+  "description": "A set of server side and client side utilities for interacting with Shopify's App Bridge Session Tokens with NextJs",
+  "main": "lib/index.js",
+  "scripts": {
+    "prepublish": "babel src --out-dir lib",
+    "build": "babel src --out-dir lib",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@babel/runtime": "^7.12.1",
+    "axios": "^0.21.0",
+    "nonce": "^1.0.4"
+  },
+  "peerDependencies": {
+    "@shopify/app-bridge-react": "^1.28.0",
+    "@shopify/app-bridge-utils": "^1.28.0",
+    "react": "17.0.1"
+  },
+  "devDependencies": {
+    "@babel/cli": "^7.12.1",
+    "@babel/core": "^7.12.3",
+    "@babel/plugin-transform-runtime": "^7.12.1",
+    "@babel/preset-env": "^7.12.1",
+    "@babel/preset-es2015": "^7.0.0-beta.53",
+    "@babel/preset-react": "^7.12.1"
+  }
+}

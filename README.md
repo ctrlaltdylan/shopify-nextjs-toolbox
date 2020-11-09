@@ -1,3 +1,5 @@
+# Shopify NextJS Toolbox
+
 A set of server side and client side NextJs utilities for integrating with Shopify's OAuth & App Bridge authentication systems.
 
 These tools will allow you to complete all steps for Shopify's new authentication system without Koa.js.
@@ -26,7 +28,7 @@ View the corresponding [Shopify NextJs repository](https://github.com/ctrlaltdyl
 
 Specifically these files:
 
-* `/pages/index.js
+* `/pages/index.js`
 * `/pages/api/auth.js`
 * `/pages/api/auth/callback.js`
 

@@ -1,3 +1,5 @@
+# Shopify NextJS Toolbox
+
 A set of server side and client side NextJs utilities for integrating with Shopify's OAuth & App Bridge authentication systems.
 
 These tools will allow you to complete all steps for Shopify's new authentication system without Koa.js.
@@ -7,17 +9,16 @@ This package includes the following tools:
 ### Server Side
 
 #### Middleware
-* withSessionToken
-* handleAuthStart
-* handleAuthCallback
+* `handleAuthStart` - for handling the first step of the Shopify OAuth handshake and redirecting back to Shopify with access scope requests
+* `handleAuthCallback` - for handling the second step of the Shopify OAuth handshake and retrieving the merchant's access token
+* `withSessionToken` - for verifying the Authorization HTTP header containing the frontend generated Session Token 
 
 ### Client Side
 
 #### Hooks
-* useApi
-
+* `useApi` - for creating an axios instance that automatically adds the session token (`Authorization: Bearer <token here>`) to every HTTP request
 #### Helpers
-* getShopOrigin
+* `getShopOrigin` - for retrieving the `shopDomain` from the query string after the OAuth handshake for AppBridge to work properly.
 
 
 ## How to integrate Shopify's OAuth with a NextJs project

@@ -26,7 +26,7 @@ View the corresponding [Shopify NextJs repository](https://github.com/ctrlaltdyl
 
 Specifically these files:
 
-* `/pages/index.js
+* `/pages/index.js`
 * `/pages/api/auth.js`
 * `/pages/api/auth/callback.js`
 

@@ -13,6 +13,7 @@ This package includes the following tools:
 - `handleAuthStart` - for handling the first step of the Shopify OAuth handshake and redirecting back to Shopify with access scope requests
 - `handleAuthCallback` - for handling the second step of the Shopify OAuth handshake and retrieving the merchant's access token
 - `withSessionToken` - for verifying the Authorization HTTP header containing the frontend generated Session Token
+- `verifyWebhook` - for verifying Webhook request.
 
 #### Custom redirect
 

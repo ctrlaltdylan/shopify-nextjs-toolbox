@@ -22,7 +22,7 @@ export default handler => {
 
       const redirectUrl = await handler(req, res, accessToken);
       if (redirectUrl) {
-        // handlign custom redirect
+        // handling custom redirect
         res.redirect(redirectUrl);
       } else {
         // finished with oauth! Redirect to home page

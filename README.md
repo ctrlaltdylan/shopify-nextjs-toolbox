@@ -14,9 +14,13 @@ This package includes the following tools:
 - `handleAuthCallback` - for handling the second step of the Shopify OAuth handshake and retrieving the merchant's access token
 - `withSessionToken` - for verifying the Authorization HTTP header containing the frontend generated Session Token
 
-#### Custom redirect
+#### Redirect to a custom URL after OAuth
 
-Custom redirect can be pass during OAuth completion at `handleAuthCallback`.
+By default `handleAuthCallback` assumes that after a user has accepted your app's scopes it will redirect the user back to the path defined in the `HOME_PATH` environment variable. No need to return a string or use `res.redirect` inside of the `handleAuthCallback`.
+
+However, if your app prompts for a payment plan immediately on install, you'll need to redirect them to the payment plan's confirmation URL at runtime.
+
+To do this, simply return the URL in string format from `handleAuthCallback` and it will redirect the user to that URL instead of the URL defined in `HOME_PATH`.
 
 ```javascript
 // pages/api/auth/callback.js
@@ -24,13 +28,6 @@ import { handleAuthCallback } from 'shopify-nextjs-toolbox';
 
 const afterAuth = async(req, res, accessToken) => {
   // save accessToken with the shop
-  db.collection('shop').insertOne({name: req.query.shop, accessToken}, (err,result) => {
-      if (err) throw err;
-
-      if (result.result.hasOwnProperty('upserted') ) {
-        console.log( JSON.stringify( result.result.upserted,  undefined, 2));
-      }
-  });
 
   //present user with billing options
   const subscriptionUrl = await getSubscriptionUrl(
@@ -38,8 +35,8 @@ const afterAuth = async(req, res, accessToken) => {
     shop,
     ...
   );
-
-  // redirect is handled by handleAuthCallback, no need to res.send() or res.redirect() here.
+  
+  // the subscriptionUrl overrides redirecting to the HOME_PATH
   return subscriptionUrl;
 };
 

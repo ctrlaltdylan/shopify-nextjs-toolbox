@@ -1,13 +1,30 @@
 const { createHmac } = require('crypto');
 
+export const config = {
+  api: {
+    bodyParser: false,
+  },
+};
+
+const webhookPayloadParser = (req) =>
+  new Promise((resolve) => {
+    let data = '';
+    req.on('data', (chunk) => {
+      data += chunk;
+    });
+    req.on('end', () => {
+      resolve(Buffer.from(data).toString());
+    });
+  });
+
 export default (handler) => {
   return async (req, res) => {
     const { SHOPIFY_API_PRIVATE_KEY } = process.env;
     const {
       headers: { 'x-shopify-hmac-sha256': hash, 'x-shopify-shop-domain': shop },
-      rawBody,
     } = req;
 
+    const rawBody = await webhookPayloadParser(req);
     try {
       const generatedHmac = await createHmac('sha256', SHOPIFY_API_PRIVATE_KEY)
         .update(rawBody, 'utf8')

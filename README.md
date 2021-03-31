@@ -40,3 +40,23 @@ View the corresponding [Shopify NextJs repository](https://github.com/ctrlaltdyl
 * `/pages/_app.js`
 * `/pages/home.js`
 * `/pages/api/verify-token.js`
+
+## Frequently Asked Questions
+
+** I'm trying to deploy my Shopify NextJS app to Vercel, but I can't use an extra server like Koa to deploy. Can I use this package instead? **
+
+That's right. This package _only uses NextJS API routing_. There is no extra server needed. You'll be able to deploy to Vercel using the `shopify-nextjs-toolbox` package for handling your authentication.
+
+** I'm trying to migrate my app off of the cookie based authentication and to session tokens, will this do that? **
+
+Also correct, you can use the middleware and hooks provided by `shopify-nextjs-toolbox` to do so.
+
+** Do I need to store the `shopOrigin` variable in localStorage in order to use this? **
+
+No, the `useShopOrigin` hook will take care of storing the shop's origin (a.k.a. the primary ID of the shop within Shopify, looks like `shop-name.myshopify.com`). If you need to use the shop's primary ID elsewhere in the frontend you can do so with `useShopifyOrigin`.
+
+** Do I need to use `useShopOrigin` to make API requests back to my API? **
+
+No, that's the nice part about Shopify's Session Tokens. The shop's name is actually encoded in the session token. The `withSessionToken` middleware will automatically populate the `req.shopName` with the shop's unique Shopify name.
+
+You don't need to pass the shop name to the API manually. Simply use the `useApi` hook to create the API client and it will handle passing the session token to your API in the `Authorization` header.

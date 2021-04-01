@@ -12,6 +12,7 @@ const req = httpMocks.createRequest({
   headers: {},
   query: {
     shop: "test.myshopify.com",
+    host: 'dylanwashere'
   },
 });
 
@@ -34,13 +35,27 @@ describe('Handling the Shopify OAuth callback response', () => {
 
   test('it redirects to the HOME_PATH by default', async () => {
     await handleAuthCallback((req, res) => {})(req, res);
-    expect(res.redirect).toHaveBeenCalledWith('/home?shop=test.myshopify.com')
+
+    expect(res.redirect).toHaveBeenCalledWith('/home?shop=test.myshopify.com&host=dylanwashere')
   });
 
   test('it redirects to the provided path if the handler returns a custom path with the shop query param appended automatically', async () => {
     await handleAuthCallback((req, res) => {
-      return '/a-custom-path'
+      return "https://getverdict.com/a-custom-path";
     })(req, res);
-    expect(res.redirect).toHaveBeenCalledWith("/a-custom-path?shop=test.myshopify.com");
+
+    expect(res.redirect).toHaveBeenCalledWith(
+      "https://getverdict.com/a-custom-path?shop=test.myshopify.com&host=dylanwashere"
+    );
   })
+
+  test("it redirects to the provided path if the handler returns a custom path with the shop query param appended automatically", async () => {
+    await handleAuthCallback((req, res) => {
+      return "https://getverdict.com/a-custom-path?signature=123123";
+    })(req, res);
+
+    expect(res.redirect).toHaveBeenCalledWith(
+      "https://getverdict.com/a-custom-path?shop=test.myshopify.com&host=dylanwashere&signature=123123"
+    );
+  });
 });

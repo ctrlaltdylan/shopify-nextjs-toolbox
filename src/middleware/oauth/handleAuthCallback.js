@@ -20,10 +20,14 @@ export default handler => {
     try {
       const accessToken = await exchangeAccessToken(req.query.shop, accessTokenQuery);
 
-      await handler(req, res, accessToken);
-
-      // finished with oauth! Redirect to home page
-      res.redirect(`${process.env.HOME_PATH}?shop=${req.query.shop}`);
+      const redirectUrl = await handler(req, res, accessToken);
+      if (redirectUrl) {
+        // handling custom redirect
+        res.redirect(redirectUrl);
+      } else {
+        // finished with oauth! Redirect to home page
+        res.redirect(`${process.env.HOME_PATH}?shop=${req.query.shop}`);
+      }
     } catch (err) {
       console.log(err);
       res.status(401).json({ message: "Error while retrieving access token.", error: err });

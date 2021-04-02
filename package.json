@@ -1,6 +1,6 @@
 {
   "name": "shopify-nextjs-toolbox",
-  "version": "0.1.12",
+  "version": "0.2.0-beta.1",
   "description": "A set of server side and client side utilities for interacting with Shopify's App Bridge Session Tokens with NextJs",
   "main": "lib/index.js",
   "scripts": {

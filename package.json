@@ -19,8 +19,8 @@
   "peerDependencies": {
     "@shopify/app-bridge-react": "^1.28.0",
     "@shopify/app-bridge-utils": "^1.28.0",
-    "next": "10.0.0",
-    "react": "17.0.1"
+    "next": "^10.0.0",
+    "react": "^17.0.1"
   },
   "devDependencies": {
     "@babel/cli": "^7.12.1",

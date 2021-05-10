@@ -2,12 +2,21 @@ import querystring from "querystring";
 import verifyHmac from "./verifyHmac";
 import exchangeAccessToken from './exchangeAccessToken';
 
-export default handler => {
+export default (handler, options) => {
   return async (req, res) => {
+
     const valid = verifyHmac(req.query);
     if (!valid) {
       res.statusCode = 403;
       res.end(JSON.stringify({ message: "Invalid Signature." }));
+      return;
+    }
+
+    const validateNonce = options && options.validateNonce;
+    const validNonce = validateNonce ? await validateNonce(req.query.state, req) : true;
+    if (!validNonce) {
+      res.statusCode = 403;
+      res.end(JSON.stringify({ message: "Invalid Nonce." }));
       return;
     }
 

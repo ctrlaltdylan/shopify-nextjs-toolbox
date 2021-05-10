@@ -35,12 +35,48 @@ const afterAuth = async(req, res, accessToken) => {
     shop,
     ...
   );
-  
+
   // the subscriptionUrl overrides redirecting to the HOME_PATH
   return subscriptionUrl;
 };
 
 export default handleAuthCallback(afterAuth);
+```
+
+#### Validating Nonce during OAuth handshake.
+
+It is recommended that you use and validate a state parameter (also called a nonce) during the OAuth handshake. By default, `handleAuthStart` generates a random string, but does not verify it. You should consider implementing your own generation and verification for the nonce.
+
+Read more about nonce verification on the [Shopify Authentication Docs](https://shopify.dev/tutorials/authenticate-with-oauth) and the state parameter on the [OAuth 2 RFC](https://datatracker.ietf.org/doc/html/rfc6819#section-3.6).
+
+To generate your own nonce, provide an async function as an option to `handleAuthStart`:
+
+```javascript
+import { handleAuthStart } from 'shopify-nextjs-toolbox';
+
+const generateNonce = async (req) => {
+  console.log("generating nonce");
+  return 'my-generated-nonce'; //eg. create uniq id in database
+};
+
+export default handleAuthStart({generateNonce});
+```
+
+To validate the nonce on the callback, provide an async function as an option to `handleAuthCallback`:
+
+```javascript
+import { handleAuthCallback } from 'shopify-nextjs-toolbox';
+
+const afterAuth = async(req, res, accessToken) => {
+ ...
+};
+
+const validateNonce = async (nonce, req) => {
+  console.log("validating nonce");
+  return nonce === 'my-generated-nonce'; //eg. validate and remove from database
+}
+
+export default handleAuthCallback(afterAuth, { validateNonce })
 ```
 
 ### Client Side

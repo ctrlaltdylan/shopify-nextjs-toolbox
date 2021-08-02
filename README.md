@@ -52,14 +52,14 @@ Read more about nonce verification on the [Shopify Authentication Docs](https://
 To generate your own nonce, provide an async function as an option to `handleAuthStart`:
 
 ```javascript
-import { handleAuthStart } from 'shopify-nextjs-toolbox';
+import { handleAuthStart } from "shopify-nextjs-toolbox";
 
 const generateNonce = async (req) => {
   console.log("generating nonce");
-  return 'my-generated-nonce'; //eg. create uniq id in database
+  return "my-generated-nonce"; //eg. create uniq id in database
 };
 
-export default handleAuthStart({generateNonce});
+export default handleAuthStart({ generateNonce });
 ```
 
 To validate the nonce on the callback, provide an async function as an option to `handleAuthCallback`:
@@ -81,14 +81,15 @@ export default handleAuthCallback(afterAuth, { validateNonce })
 
 ### Client Side
 
+#### Components
+
+- `ShopifyAppBridgeProvider` - this component will act as the gatekeeper to your app. It will redirect to begin the OAuth process if the user isn't authenticated.
+
 #### Hooks
 
 - `useApi` - for creating an axios instance that automatically adds the session token (`Authorization: Bearer <token here>`) to every HTTP request
-
-#### Helpers
-
-- `getShopOrigin` - for retrieving the `shopDomain` from the query string after the OAuth handshake for AppBridge to work properly. (uses Local Storage)
-- `useShopOrigin` - [Recommended] also retrieves and stores the `shopDomain` but does not use local storage to store the string. Instead it just sets the `shopOrigin` in React state.
+- `useShopOrigin` - for retrieving the `shopOrigin` query string parameter given by Shopify from the URL
+- `useHost` - for retrieving the `host` query string parameter given by Shopify from the URL
 
 ## How to integrate Shopify's OAuth with a NextJs project
 
@@ -96,6 +97,7 @@ View the corresponding [Shopify NextJs repository](https://github.com/ctrlaltdyl
 
 Specifically these files:
 
+- `/pages/_app.js`
 - `/pages/index.js`
 - `/pages/api/auth.js`
 - `/pages/api/auth/callback.js`
@@ -106,9 +108,9 @@ View the corresponding [Shopify NextJs repository](https://github.com/ctrlaltdyl
 
 **Remember** session token generation occurs _after_ the OAuth handshake. So these components & pages are triggered after OAuth and the user has been redirected to `pages/home.js`.
 
-* `/pages/_app.js`
-* `/pages/home.js`
-* `/pages/api/verify-token.js`
+- `/pages/_app.js`
+- `/pages/home.js`
+- `/pages/api/verify-token.js`
 
 ## Frequently Asked Questions
 

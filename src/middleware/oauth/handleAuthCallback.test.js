@@ -17,6 +17,7 @@ const req = httpMocks.createRequest({
 
 const res = {
   redirect: jest.fn(),
+  end: jest.fn(),
 };
 
 describe('Handling the Shopify OAuth callback response', () => {
@@ -30,6 +31,16 @@ describe('Handling the Shopify OAuth callback response', () => {
 
   afterAll(() => {
     process.env = OLD_ENV; // Restore old environment
+  });
+
+  test('it fails if validateNonce fails', async () => {
+    await handleAuthCallback((req, res) => {}, { validateNonce: async () => false })(req, res);
+    expect(res.end).toHaveBeenCalledWith(JSON.stringify({message: "Invalid Nonce."}));
+  });
+
+  test('it passes if validateNonce passes', async () => {
+    await handleAuthCallback((req, res) => {}, { validateNonce: async () => true })(req, res);
+    expect(res.redirect).toHaveBeenCalledWith('/home?shop=test.myshopify.com')
   });
 
   test('it redirects to the HOME_PATH by default', async () => {

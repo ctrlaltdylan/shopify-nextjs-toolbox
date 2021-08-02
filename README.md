@@ -131,3 +131,72 @@ No, the `useShopOrigin` hook will take care of storing the shop's origin (a.k.a.
 No, that's the nice part about Shopify's Session Tokens. The shop's name is actually encoded in the session token. The `withSessionToken` middleware will automatically populate the `req.shopName` with the shop's unique Shopify name.
 
 You don't need to pass the shop name to the API manually. Simply use the `useApi` hook to create the API client and it will handle passing the session token to your API in the `Authorization` header.
+
+## Migrating from v1 to v2
+
+The original `shopify-nextjs-toolbox` package was compatible with AppBridge v1. AppBridge v2 has seen been released and is required for all new apps, and starting Jan 1st 2022 it will be required for all Shopify apps to use AppBridge v2.
+
+If you're using `shopify-nextjs-toolbox` version 1.x, here's how to use the new v2.
+
+### 1. Update your frontend index page to use the new useOAuth hook:
+
+```javascript
+// pages/index.js
+
+import React, { useEffect } from "react";
+import { useOAuth } from "shopify-nextjs-toolbox";
+
+export default function Index() {
+  // if the current user isn't logged in, redirect them to begin OAuth on Shopify
+  useOAuth();
+
+  // replace this with your jazzy loading icon animation
+  return <>Loading...</>;
+}
+```
+
+### 2. Replace Shopify's <Provider> with the included <ShopifyAppBridgeProvider>
+
+```javascript
+import { ShopifyAppBridgeProvider } from "shopify-nextjs-toolbox";
+import { Provider } from "@shopify/app-bridge-react";
+import enTranslations from "@shopify/polaris/locales/en.json";
+import { AppProvider } from "@shopify/polaris";
+
+function MyApp({ Component, pageProps }) {
+  // The ShopifyAppBridgeProvider abstracts starting the OAuth process
+  //   it will automatically redirect unauthenticated users to your `/api/auth.js` route
+  //   note: the "appBridgeConfig" is just a way to pass AppBridge options, by default we'll handle passing the host in for you
+  return (
+    <ShopifyAppBridgeProvider
+      Component={Component}
+      pageProps={pageProps}
+      appBridgeConfig={{}}
+    >
+      <AppProvider i18n={enTranslations}>
+        <Component {...pageProps} />
+      </AppProvider>
+    </ShopifyAppBridgeProvider>
+  );
+}
+
+export default MyApp;
+```
+
+### 2. (Optional) implement a nonce at the start of the OAuth process
+
+```javascript
+// pages/api/auth.js
+
+import { handleAuthStart } from "shopify-nextjs-toolbox";
+
+const generateNonce = async (req) => {
+  // create a unique string and associate it with the current shop in the database
+  // during the OAuth callback step, we'll verify Shopify sends it back to us
+  // this proves Shopify is Shopify and not some bad actor
+
+  return "{{ nonce here }}";
+};
+
+export default handleAuthStart;
+```

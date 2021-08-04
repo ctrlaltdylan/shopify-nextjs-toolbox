@@ -1,5 +1,4 @@
-const nonce = require("nonce");
-const createNonce = nonce();
+import { createNonce } from "../helpers";
 
 export default (options) => {
   return async (req, res) => {

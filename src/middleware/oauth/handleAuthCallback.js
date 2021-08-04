@@ -33,31 +33,14 @@ export default (handler, options) => {
         req.query.shop,
         accessTokenQuery
       );
-      // optional redirectUrl from the user, by default we use HOME_PATH
-      const redirect = await handler(req, res, accessToken);
+      const redirectPath = await handler(req, res, accessToken);
 
-      if (!redirect) {
-        res.redirect(
-          `${process.env.HOME_PATH}?${querystring.stringify(req.query)}`
-        );
-        return;
-      }
-
-      // if redirectUrl.origin is null, it means we have been given a path, not a fully qualified URL
-      const redirectUrl = new URL(redirect);
-      const redirectUrlQuery = Object.fromEntries(redirectUrl.searchParams);
-
-      if (redirectUrl.origin) {
-        res.redirect(
-          `${redirectUrl.origin}${redirectUrl.pathname}?${querystring.stringify(
-            { ...req.query, ...redirectUrlQuery }
-          )}`
-        );
-      }
-
-      throw new Error(
-        `Please provide a fully qualifed URL. Instead received ${redirect}`
+      res.redirect(
+        `${redirectPath || process.env.HOME_PATH}?${querystring.stringify(
+          req.query
+        )}`
       );
+      return;
     } catch (err) {
       console.log(err);
 

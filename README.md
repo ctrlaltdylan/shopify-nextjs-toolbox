@@ -183,7 +183,7 @@ function MyApp({ Component, pageProps }) {
 export default MyApp;
 ```
 
-### 2. (Optional) implement a nonce at the start of the OAuth process
+### 3. (Optional) implement a nonce at the start of the OAuth process
 
 ```javascript
 // pages/api/auth.js
@@ -199,4 +199,35 @@ const generateNonce = async (req) => {
 };
 
 export default handleAuthStart;
+```
+
+### 3. (Optional) validate the nonce at the end of the OAuth process
+
+```javascript
+// pages/api/auth/callback.js
+
+import { handleAuthCallback } from "shopify-nextjs-toolbox";
+
+const validateNonce = async (nonce, req) => {
+  // retrieve the nonce associated with the current shop from OAuth
+  // validate the nonce passed into this argument matches that nonce
+};
+
+const afterAuth = async (req, res, tokenData) => {
+  const shop = req.query.shop;
+  const accessToken = tokenData.access_token;
+
+  // save the accessToken with the shop in your database to interact with the Shopify Admin API
+};
+
+export default handleAuthCallback(afterAuth, { options: { validateNonce } });
+```
+
+### 4. `useApi` doesn't require a token any longer
+
+```javascript
+// now you can use useApi() without any arguments, it infers the session token from the AppBridge context under the hood.
+const api = useApi();
+
+const { data } = await api.get("/api/shop");
 ```

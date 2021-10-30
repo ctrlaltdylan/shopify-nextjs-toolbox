@@ -45,24 +45,23 @@ export default handleAuthCallback(afterAuth);
 
 #### Validating Nonce during OAuth handshake.
 
-It is recommended that you use and validate a state parameter (also called a nonce) during the OAuth handshake. By default, `handleAuthStart` generates a random string, but does not verify it. You should consider implementing your own generation and verification for the nonce.
+It is recommended that you use and validate a state parameter (also called a nonce) during the OAuth handshake. By default, `handleAuthStart` generates a random nonce for you, but does not store it for you. The database decision is left to you.
 
 Read more about nonce verification on the [Shopify Authentication Docs](https://shopify.dev/tutorials/authenticate-with-oauth) and the state parameter on the [OAuth 2 RFC](https://datatracker.ietf.org/doc/html/rfc6819#section-3.6).
 
-To generate your own nonce, provide an async function as an option to `handleAuthStart`:
+To save the generated own nonce during the inital OAuth URL generation, provide an async function `saveNonce` as an option to `handleAuthStart`:
 
 ```javascript
 import { handleAuthStart } from "shopify-nextjs-toolbox";
 
-const generateNonce = async (req) => {
-  console.log("generating nonce");
-  return "my-generated-nonce"; //eg. create uniq id in database
+const saveNonce = async ({ req, shopName, nonce }) => {
+  // associate the nonce in your database with the shopName for later retrieval in the OAuth callback
 };
 
-export default handleAuthStart({ generateNonce });
+export default handleAuthStart({ saveNonce });
 ```
 
-To validate the nonce on the callback, provide an async function as an option to `handleAuthCallback`:
+To validate the nonce on the callback, provide an async function `validateNonce` as an option to `handleAuthCallback`:
 
 ```javascript
 import { handleAuthCallback } from 'shopify-nextjs-toolbox';
@@ -71,13 +70,19 @@ const afterAuth = async(req, res, accessToken) => {
  ...
 };
 
-const validateNonce = async (nonce, req) => {
-  console.log("validating nonce");
-  return nonce === 'my-generated-nonce'; //eg. validate and remove from database
+const validateNonce = async ({ nonce, req, shopName }) => {
+  // retrieve the nonce associated with shopName from your database from `saveNonce` earlier
+  // validate they are the same
+  // below is totally pseudocode, but you get the idea
+  const savedNonce = await db.getShop({ name: shopName }).nonce;
+
+  return nonce === savedNonce;
 }
 
 export default handleAuthCallback(afterAuth, { validateNonce })
 ```
+
+Note: validating nonces are optional for OAuth. If this is confusing, you can simply omit `saveNonce` and `validateNonce` from the middlewares as arguments, but it is recommended as a security step to validate the nonce to prove Shopify's identity.
 
 ### Client Side
 
@@ -190,15 +195,15 @@ export default MyApp;
 
 import { handleAuthStart } from "shopify-nextjs-toolbox";
 
-const generateNonce = async (req) => {
-  // create a unique string and associate it with the current shop in the database
-  // during the OAuth callback step, we'll verify Shopify sends it back to us
-  // this proves Shopify is Shopify and not some bad actor
-
-  return "{{ nonce here }}";
+const saveNonce = async (req, shopName, nonce) => {
+  // shopify-nextjs-toolbox does the work of generating a secure unique nonce
+  //   for better security, associate this nonce with the shop
+  //
+  // Example:
+  // await db.connect().collection('nonces').insertOne({ shopName, nonce });
 };
 
-export default handleAuthStart;
+export default handleAuthStart({ saveNonce });
 ```
 
 ### 3. (Optional) validate the nonce at the end of the OAuth process

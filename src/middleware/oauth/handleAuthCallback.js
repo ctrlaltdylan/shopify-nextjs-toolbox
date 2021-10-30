@@ -1,7 +1,6 @@
 import querystring from "querystring";
 import verifyHmac from "./verifyHmac";
 import exchangeAccessToken from "./exchangeAccessToken";
-import { URL } from "url";
 
 export default (handler, options) => {
   return async (req, res) => {
@@ -14,7 +13,11 @@ export default (handler, options) => {
 
     const validateNonce = options && options.validateNonce;
     const validNonce = validateNonce
-      ? await validateNonce(req.query.state, req)
+      ? await validateNonce({
+          nonce: req.query.state,
+          req,
+          shopName: req.query.shop,
+        })
       : true;
     if (!validNonce) {
       res.statusCode = 403;

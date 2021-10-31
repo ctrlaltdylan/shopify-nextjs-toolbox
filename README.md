@@ -45,24 +45,23 @@ export default handleAuthCallback(afterAuth);
 
 #### Validating Nonce during OAuth handshake.
 
-It is recommended that you use and validate a state parameter (also called a nonce) during the OAuth handshake. By default, `handleAuthStart` generates a random string, but does not verify it. You should consider implementing your own generation and verification for the nonce.
+It is recommended that you use and validate a state parameter (also called a nonce) during the OAuth handshake. By default, `handleAuthStart` generates a random nonce for you, but does not store it for you. The database decision is left to you.
 
 Read more about nonce verification on the [Shopify Authentication Docs](https://shopify.dev/tutorials/authenticate-with-oauth) and the state parameter on the [OAuth 2 RFC](https://datatracker.ietf.org/doc/html/rfc6819#section-3.6).
 
-To generate your own nonce, provide an async function as an option to `handleAuthStart`:
+To save the generated own nonce during the inital OAuth URL generation, provide an async function `saveNonce` as an option to `handleAuthStart`:
 
 ```javascript
-import { handleAuthStart } from 'shopify-nextjs-toolbox';
+import { handleAuthStart } from "shopify-nextjs-toolbox";
 
-const generateNonce = async (req) => {
-  console.log("generating nonce");
-  return 'my-generated-nonce'; //eg. create uniq id in database
+const saveNonce = async ({ req, shopName, nonce }) => {
+  // associate the nonce in your database with the shopName for later retrieval in the OAuth callback
 };
 
-export default handleAuthStart({generateNonce});
+export default handleAuthStart({ saveNonce });
 ```
 
-To validate the nonce on the callback, provide an async function as an option to `handleAuthCallback`:
+To validate the nonce on the callback, provide an async function `validateNonce` as an option to `handleAuthCallback`:
 
 ```javascript
 import { handleAuthCallback } from 'shopify-nextjs-toolbox';
@@ -71,24 +70,31 @@ const afterAuth = async(req, res, accessToken) => {
  ...
 };
 
-const validateNonce = async (nonce, req) => {
-  console.log("validating nonce");
-  return nonce === 'my-generated-nonce'; //eg. validate and remove from database
+const validateNonce = async ({ nonce, req, shopName }) => {
+  // retrieve the nonce associated with shopName from your database from `saveNonce` earlier
+  // validate they are the same
+  // below is totally pseudocode, but you get the idea
+  const savedNonce = await db.getShop({ name: shopName }).nonce;
+
+  return nonce === savedNonce;
 }
 
 export default handleAuthCallback(afterAuth, { validateNonce })
 ```
 
+Note: validating nonces are optional for OAuth. If this is confusing, you can simply omit `saveNonce` and `validateNonce` from the middlewares as arguments, but it is recommended as a security step to validate the nonce to prove Shopify's identity.
+
 ### Client Side
+
+#### Components
+
+- `ShopifyAppBridgeProvider` - this component will act as the gatekeeper to your app. It will redirect to begin the OAuth process if the user isn't authenticated.
 
 #### Hooks
 
 - `useApi` - for creating an axios instance that automatically adds the session token (`Authorization: Bearer <token here>`) to every HTTP request
-
-#### Helpers
-
-- `getShopOrigin` - for retrieving the `shopDomain` from the query string after the OAuth handshake for AppBridge to work properly. (uses Local Storage)
-- `useShopOrigin` - [Recommended] also retrieves and stores the `shopDomain` but does not use local storage to store the string. Instead it just sets the `shopOrigin` in React state.
+- `useShopOrigin` - for retrieving the `shopOrigin` query string parameter given by Shopify from the URL
+- `useHost` - for retrieving the `host` query string parameter given by Shopify from the URL
 
 ## How to integrate Shopify's OAuth with a NextJs project
 
@@ -96,6 +102,7 @@ View the corresponding [Shopify NextJs repository](https://github.com/ctrlaltdyl
 
 Specifically these files:
 
+- `/pages/_app.js`
 - `/pages/index.js`
 - `/pages/api/auth.js`
 - `/pages/api/auth/callback.js`
@@ -106,9 +113,9 @@ View the corresponding [Shopify NextJs repository](https://github.com/ctrlaltdyl
 
 **Remember** session token generation occurs _after_ the OAuth handshake. So these components & pages are triggered after OAuth and the user has been redirected to `pages/home.js`.
 
-* `/pages/_app.js`
-* `/pages/home.js`
-* `/pages/api/verify-token.js`
+- `/pages/_app.js`
+- `/pages/home.js`
+- `/pages/api/verify-token.js`
 
 ## Frequently Asked Questions
 
@@ -129,3 +136,103 @@ No, the `useShopOrigin` hook will take care of storing the shop's origin (a.k.a.
 No, that's the nice part about Shopify's Session Tokens. The shop's name is actually encoded in the session token. The `withSessionToken` middleware will automatically populate the `req.shopName` with the shop's unique Shopify name.
 
 You don't need to pass the shop name to the API manually. Simply use the `useApi` hook to create the API client and it will handle passing the session token to your API in the `Authorization` header.
+
+## Migrating from v1 to v2
+
+The original `shopify-nextjs-toolbox` package was compatible with AppBridge v1. AppBridge v2 has seen been released and is required for all new apps, and starting Jan 1st 2022 it will be required for all Shopify apps to use AppBridge v2.
+
+If you're using `shopify-nextjs-toolbox` version 1.x, here's how to use the new v2.
+
+### 1. Update your frontend index page to use the new useOAuth hook:
+
+```javascript
+// pages/index.js
+
+import React, { useEffect } from "react";
+import { useOAuth } from "shopify-nextjs-toolbox";
+
+export default function Index() {
+  // if the current user isn't logged in, redirect them to begin OAuth on Shopify
+  useOAuth();
+
+  // replace this with your jazzy loading icon animation
+  return <>Loading...</>;
+}
+```
+
+### 2. Replace Shopify's <Provider> with the included <ShopifyAppBridgeProvider>
+
+```javascript
+import { ShopifyAppBridgeProvider } from "shopify-nextjs-toolbox";
+import { Provider } from "@shopify/app-bridge-react";
+import enTranslations from "@shopify/polaris/locales/en.json";
+import { AppProvider } from "@shopify/polaris";
+
+function MyApp({ Component, pageProps }) {
+  // The ShopifyAppBridgeProvider abstracts starting the OAuth process
+  //   it will automatically redirect unauthenticated users to your `/api/auth.js` route
+  //   note: the "appBridgeConfig" is just a way to pass AppBridge options, by default we'll handle passing the host in for you
+  return (
+    <ShopifyAppBridgeProvider
+      Component={Component}
+      pageProps={pageProps}
+      appBridgeConfig={{}}
+    >
+      <AppProvider i18n={enTranslations}>
+        <Component {...pageProps} />
+      </AppProvider>
+    </ShopifyAppBridgeProvider>
+  );
+}
+
+export default MyApp;
+```
+
+### 3. (Optional) implement a nonce at the start of the OAuth process
+
+```javascript
+// pages/api/auth.js
+
+import { handleAuthStart } from "shopify-nextjs-toolbox";
+
+const saveNonce = async (req, shopName, nonce) => {
+  // shopify-nextjs-toolbox does the work of generating a secure unique nonce
+  //   for better security, associate this nonce with the shop
+  //
+  // Example:
+  // await db.connect().collection('nonces').insertOne({ shopName, nonce });
+};
+
+export default handleAuthStart({ saveNonce });
+```
+
+### 3. (Optional) validate the nonce at the end of the OAuth process
+
+```javascript
+// pages/api/auth/callback.js
+
+import { handleAuthCallback } from "shopify-nextjs-toolbox";
+
+const validateNonce = async (nonce, req) => {
+  // retrieve the nonce associated with the current shop from OAuth
+  // validate the nonce passed into this argument matches that nonce
+};
+
+const afterAuth = async (req, res, tokenData) => {
+  const shop = req.query.shop;
+  const accessToken = tokenData.access_token;
+
+  // save the accessToken with the shop in your database to interact with the Shopify Admin API
+};
+
+export default handleAuthCallback(afterAuth, { options: { validateNonce } });
+```
+
+### 4. `useApi` doesn't require a token any longer
+
+```javascript
+// now you can use useApi() without any arguments, it infers the session token from the AppBridge context under the hood.
+const api = useApi();
+
+const { data } = await api.get("/api/shop");
+```

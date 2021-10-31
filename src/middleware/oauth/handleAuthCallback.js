@@ -1,10 +1,9 @@
 import querystring from "querystring";
 import verifyHmac from "./verifyHmac";
-import exchangeAccessToken from './exchangeAccessToken';
+import exchangeAccessToken from "./exchangeAccessToken";
 
 export default (handler, options) => {
   return async (req, res) => {
-
     const valid = verifyHmac(req.query);
     if (!valid) {
       res.statusCode = 403;
@@ -13,7 +12,13 @@ export default (handler, options) => {
     }
 
     const validateNonce = options && options.validateNonce;
-    const validNonce = validateNonce ? await validateNonce(req.query.state, req) : true;
+    const validNonce = validateNonce
+      ? await validateNonce({
+          nonce: req.query.state,
+          req,
+          shopName: req.query.shop,
+        })
+      : true;
     if (!validNonce) {
       res.statusCode = 403;
       res.end(JSON.stringify({ message: "Invalid Nonce." }));
@@ -27,16 +32,26 @@ export default (handler, options) => {
     });
 
     try {
-      const accessToken = await exchangeAccessToken(req.query.shop, accessTokenQuery);
+      const accessToken = await exchangeAccessToken(
+        req.query.shop,
+        accessTokenQuery
+      );
+      const redirectPath = await handler(req, res, accessToken);
 
-      const redirectUrl = await handler(req, res, accessToken);
-
-      // finished with oauth! Redirect to home page or the custom URL provided by the handler
-      res.redirect(`${redirectUrl || process.env.HOME_PATH}?shop=${req.query.shop}`);
+      res.redirect(
+        `${redirectPath || process.env.HOME_PATH}?${querystring.stringify(
+          req.query
+        )}`
+      );
+      return;
     } catch (err) {
       console.log(err);
-      res.status(401).json({ message: "Error while retrieving access token.", error: err });
+
+      res
+        .status(401)
+        .json({ message: "Error while retrieving access token.", error: err });
+
       return;
     }
-  }
+  };
 };

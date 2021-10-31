@@ -3,7 +3,12 @@ import axios from "axios";
 import { getSessionToken } from "@shopify/app-bridge-utils";
 import { Context as ShopifyAppContext } from "@shopify/app-bridge-react";
 
-export default function useApi(token) {
+/**
+ * Creates a axios client that uses Shopify JWT Session Token authentication
+ *
+ * @returns axios
+ */
+export default function useApi() {
   const api = axios.create();
   const app = useContext(ShopifyAppContext);
 

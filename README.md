@@ -160,7 +160,7 @@ export default function Index() {
 }
 ```
 
-### 2. Replace Shopify's <Provider> with the included <ShopifyAppBridgeProvider>
+### 2. Replace Shopify's `<Provider>` with the included `<ShopifyAppBridgeProvider>`
 
 ```javascript
 import { ShopifyAppBridgeProvider } from "shopify-nextjs-toolbox";
@@ -195,7 +195,7 @@ export default MyApp;
 
 import { handleAuthStart } from "shopify-nextjs-toolbox";
 
-const saveNonce = async (req, shopName, nonce) => {
+const saveNonce = async ({ req, shopName, nonce }) => {
   // shopify-nextjs-toolbox does the work of generating a secure unique nonce
   //   for better security, associate this nonce with the shop
   //
@@ -213,7 +213,7 @@ export default handleAuthStart({ saveNonce });
 
 import { handleAuthCallback } from "shopify-nextjs-toolbox";
 
-const validateNonce = async (nonce, req) => {
+const validateNonce = async ({ req, shopName, nonce }) => {
   // retrieve the nonce associated with the current shop from OAuth
   // validate the nonce passed into this argument matches that nonce
 };

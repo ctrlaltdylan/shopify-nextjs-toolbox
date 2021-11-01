@@ -88,10 +88,11 @@ Note: validating nonces are optional for OAuth. If this is confusing, you can si
 
 #### Components
 
-- `ShopifyAppBridgeProvider` - this component will act as the gatekeeper to your app. It will redirect to begin the OAuth process if the user isn't authenticated.
+- `ShopifyAppBridgeProvider` - this component will act as the gatekeeper to your app. It will automatically store the `host` and `shop` parameters and pass them along to AppBridge during instantiation at the very end of OAuth.
 
 #### Hooks
 
+- `useOAuth` - for automatically calling the `/api/auth.js` route to generate the URL to begin the OAuth handshake. Automatically redirects to the merchant to it as well. 
 - `useApi` - for creating an axios instance that automatically adds the session token (`Authorization: Bearer <token here>`) to every HTTP request
 - `useShopOrigin` - for retrieving the `shopOrigin` query string parameter given by Shopify from the URL
 - `useHost` - for retrieving the `host` query string parameter given by Shopify from the URL

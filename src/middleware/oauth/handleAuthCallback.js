@@ -25,17 +25,17 @@ export default (handler, options) => {
       return;
     }
 
-    const accessTokenQuery = querystring.stringify({
+    const accessTokenQuery = {
       code: req.query.code,
       client_id: process.env.SHOPIFY_API_PUBLIC_KEY,
       client_secret: process.env.SHOPIFY_API_PRIVATE_KEY,
-    });
+    };
 
     try {
-      const accessToken = await exchangeAccessToken(
-        req.query.shop,
-        accessTokenQuery
-      );
+      const {
+        data: { accessToken },
+      } = await exchangeAccessToken(req.query.shop, accessTokenQuery);
+
       const redirectPath = await handler(req, res, accessToken);
 
       res.redirect(
@@ -45,11 +45,12 @@ export default (handler, options) => {
       );
       return;
     } catch (err) {
-      console.log(err);
+      console.error(err);
 
-      res
-        .status(401)
-        .json({ message: "Error while retrieving access token.", error: err });
+      res.status(401).json({
+        message: "Error while retrieving access token from Shopify.",
+        error: err,
+      });
 
       return;
     }

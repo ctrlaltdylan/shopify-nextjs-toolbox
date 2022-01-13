@@ -13,12 +13,12 @@ export default (handler, options) => {
 
     const validateNonce = options && options.validateNonce;
     const validNonce = validateNonce
-      ? await validateNonce({
+        ? await validateNonce({
           nonce: req.query.state,
           req,
           shopName: req.query.shop,
         })
-      : true;
+        : true;
     if (!validNonce) {
       res.statusCode = 403;
       res.end(JSON.stringify({ message: "Invalid Nonce." }));
@@ -33,23 +33,29 @@ export default (handler, options) => {
 
     try {
       const accessToken = await exchangeAccessToken(
-        req.query.shop,
-        accessTokenQuery
+          req.query.shop,
+          accessTokenQuery
       );
       const redirectPath = await handler(req, res, accessToken);
 
-      res.redirect(
-        `${redirectPath || process.env.HOME_PATH}?${querystring.stringify(
-          req.query
-        )}`
-      );
+      let redirectUrl;
+
+      if(redirectPath && redirectPath.includes('?')) {
+        redirectUrl = `${redirectPath}&${querystring.stringify(req.query)}`
+      }
+      else{
+        redirectUrl = `${redirectPath || process.env.HOME_PATH}?${querystring.stringify(req.query)}`
+      }
+
+      res.redirect(redirectUrl);
       return;
+
     } catch (err) {
       console.log(err);
 
       res
-        .status(401)
-        .json({ message: "Error while retrieving access token.", error: err });
+          .status(401)
+          .json({ message: "Error while retrieving access token.", error: err });
 
       return;
     }
